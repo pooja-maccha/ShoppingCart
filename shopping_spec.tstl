@@ -1,89 +1,36 @@
-include tstl_python.tstl
-include testlib.tstl
-include shopping_cart
+# ShoppingCart TSTL Harness
 
-model ShoppingCart:
-    MAX_SIZE = 5
+# Import the ShoppingCart class
+<: import shopping_cart.ShoppingCart :>
 
-    def __init__(self):
-        self.cart = shopping_cart.ShoppingCart(self.MAX_SIZE)
+# Define the pool of objects
+pool: ShoppingCart 1
 
-    def add(self, item):
-        try:
-            self.cart.add(item)
-            self.result = "SUCCESS"
-        except OverflowError:
-            self.result = "OVERFLOW_ERROR"
+# Initialize the ShoppingCart object
+init: s = ShoppingCart()
 
-    def size(self):
-        self.result = self.cart.size()
+# Define actions
+[action]
+s.add(<str:item>)
+{precondition: item not in [items["item"] for item in s.items]}
+{postcondition: any(items["item"] == item for item in s.items)}
 
-    def get_items(self):
-        self.result = self.cart.get_items()
+[action]
+s.remove_item(<str:item>)
+{precondition: item in [items["item"] for item in s.items]}
+{postcondition: not any(items["item"] == item for item in s.items)}
 
-    def get_total_price(self, price_map):
-        self.result = self.cart.get_total_price(price_map)
+[action]
+items[] = s.get_items()
+{precondition: items in [items["items"] for item in s.items]}
+{postcondition: items[] == all(items["item"] for item in s.items)}
 
-    def remove_item(self, item):
-        try:
-            self.cart.remove_item(item)
-            self.result = "SUCCESS"
-        except ValueError:
-            self.result = "VALUE_ERROR"
+[action]
+items[] = s.clear()
+{precondition: items in [items["items"] for item in s.items]}
+{postcondition: items[] == any(items["item"] == [] for item in s.items)}
 
-    def clear_cart(self):
-        self.cart.clear_cart()
-        self.result = "SUCCESS"
-
-    def check_item_in_cart(self, item):
-        try:
-            self.cart.check_item_in_cart(item)
-            self.result = "SUCCESS"
-        except ValueError:
-            self.result = "VALUE_ERROR"
-
-def test_can_add_item_to_cart(self):
-    self.add("apple")
-
-def test_when_item_added_then_cart_contains_item(self):
-    self.add("apple")
-    assert "apple" in self.get_items()
-
-def test_when_add_more_than_max_items_should_fail(self):
-    for _ in range(5):
-        self.add("apple")
-    self.add("apple")
-    assert self.result == "OVERFLOW_ERROR"
-
-def test_can_get_total_price(self):
-    self.add("apple")
-    self.add("orange")
-    price_map = {"apple": 1.0, "orange": 2.0}
-    self.get_total_price(price_map)
-    assert self.result == 3.0
-
-def test_remove_item_from_cart(self):
-    self.add("apple")
-    self.add("grapes")
-    self.add("orange")
-    self.add("blueberry")
-    self.remove_item("grapes")
-    assert "grapes" not in self.get_items()
-    self.remove_item("banana")
-    assert self.result == "VALUE_ERROR"
-
-def test_clear_cart(self):
-    self.clear_cart()
-    assert self.size() == 0
-
-def test_check_item_in_cart(self):
-    self.add("apple")
-    self.add("mango")
-    self.add("blueberry")
-    self.check_item_in_cart("orange")
-    assert "orange" in self.get_items()
-    self.check_item_in_cart("apple")
-    assert self.result == "VALUE_ERROR"
-
-property cart_size(self):
-    assert self.size() >= 0
+[action]
+size = s.size()
+{precondition: items in [items["item"] for item in s.items]}
+{postcondition: any(size of items[] == 0 )}
